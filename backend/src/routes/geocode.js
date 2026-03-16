@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addressToCoords, coordsToAddress, searchByKeyword } = require('../services/kakaoApi');
+const { addressToCoords, coordsToAddress, searchByKeyword, searchKeywordGlobal } = require('../services/kakaoApi');
 
 // 주소 → 좌표
 router.get('/address', async (req, res) => {
@@ -28,12 +28,14 @@ router.get('/coords', async (req, res) => {
   }
 });
 
-// 키워드 검색
+// 키워드 검색 (반경 있음 - 마커용)
 router.get('/search', async (req, res) => {
   const { keyword, lat, lng, radius = 5000 } = req.query;
   if (!keyword) return res.status(400).json({ success: false, error: 'keyword 필수' });
   try {
-    const results = await searchByKeyword(keyword, lng, lat, parseInt(radius));
+    const results = lat && lng
+      ? await searchByKeyword(keyword, lng, lat, parseInt(radius))
+      : await searchKeywordGlobal(keyword);
     res.json({ success: true, data: results });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

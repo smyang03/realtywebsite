@@ -7,6 +7,7 @@ const MapComponent = (() => {
   let markers = [];
   let infoWindow = null;
   let activeMarkerData = null;
+  let searchMarker = null;
 
   // 서울 시청 기본 좌표
   const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 };
@@ -156,14 +157,44 @@ const MapComponent = (() => {
    */
   async function moveToAddress(query) {
     try {
+      // 1. 주소 검색 시도
       const result = await api.geocode(query);
       if (result.success && result.data) {
-        const pos = new kakao.maps.LatLng(result.data.lat, result.data.lng);
-        map.setCenter(pos);
+        const { lat, lng, address } = result.data;
+        map.setCenter(new kakao.maps.LatLng(lat, lng));
         map.setLevel(4);
+        _placeSearchMarker(lat, lng, address || query);
+        return;
       }
-    } catch (e) {
-      helpers.showToast('주소를 찾을 수 없습니다.', 'error');
+    } catch (e) { /* fallthrough */ }
+
+    try {
+      // 2. 전국 키워드 검색 fallback
+      const result = await api.searchKeyword(query);
+      if (result.success && result.data && result.data.length > 0) {
+        const first = result.data[0];
+        const lat = parseFloat(first.y), lng = parseFloat(first.x);
+        map.setCenter(new kakao.maps.LatLng(lat, lng));
+        map.setLevel(4);
+        _placeSearchMarker(lat, lng, first.place_name || query);
+        return;
+      }
+    } catch (e) { /* fallthrough */ }
+
+    helpers.showToast('검색 결과를 찾을 수 없습니다.', 'error');
+  }
+
+  function _placeSearchMarker(lat, lng, label) {
+    if (searchMarker) searchMarker.setMap(null);
+    const pos = new kakao.maps.LatLng(lat, lng);
+    searchMarker = new kakao.maps.Marker({ position: pos, map });
+    if (label) {
+      const overlay = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: `<div style="background:#1E40AF;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;white-space:nowrap;margin-bottom:4px">${label}</div>`,
+        yAnchor: 2.2
+      });
+      overlay.setMap(map);
     }
   }
 

@@ -61,4 +61,15 @@ async function coordsToAddress(lat, lng) {
   };
 }
 
-module.exports = { addressToCoords, searchByKeyword, coordsToAddress };
+/**
+ * 키워드 전국 검색 (반경 제한 없음)
+ */
+async function searchKeywordGlobal(keyword) {
+  const res = await axios.get(`${KAKAO_API_BASE}/search/keyword.json`, {
+    headers: headers(),
+    params: { query: keyword, size: 5 }
+  });
+  return res.data?.documents || [];
+}
+
+module.exports = { addressToCoords, searchByKeyword, searchKeywordGlobal, coordsToAddress };
