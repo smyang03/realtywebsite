@@ -1,0 +1,16 @@
+{
+  "name": "jipbom",
+  "version": "1.0.0",
+  "description": "집봄 - 아파트 지도 검색 플랫폼",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "npx live-server frontend --port=3000 --host=localhost --no-browser",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "setup": "npm run install:backend && echo '\\n✅ 설치 완료! npm run dev 로 실행하세요.'"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "live-server": "^1.2.2"
+  }
+}
